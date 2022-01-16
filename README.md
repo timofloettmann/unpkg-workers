@@ -13,13 +13,13 @@ This project is a re-implementation of [unpkg.com](https://unpkg.com) ([Github](
 
 ## Usage
 
-A minimal request would be for example `/main/react`.
+First off, the shortest request possible would be `/react`, which would be the same as `/react@latest/main`
 
 `main` in this case says which field from the package.json to use to determine the actual entry file. The only other allowed value is `unpkg` (See [this issue](https://github.com/mjackson/unpkg/issues/63) to learn more about the `unpkg` field and why it might be useful)
 
-With a short request such as the above, the version always falls back to `latest`, so `/main/react` is the same as `/main/react@latest`.
+With a short request such as the above, the version always falls back to `latest`.
 
-Any valid semver range is accepted, at time of writing `/main/react@^17.0` would resolve to `/main/react@17.0.2`.
+Any valid semver range is accepted, at time of writing `/react@^17.0` would resolve to `/react@17.0.2/main`.
 
 Any request that does not contain a file path, will redirect with either a 302 or 301 status code, depending on the requested version. If the request was for a semver range or tag, the redirect will be a temporary one. Whereas requests for exact versions will end in a permanent redirect.
 

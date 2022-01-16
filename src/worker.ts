@@ -1,31 +1,101 @@
-import { validateEntryParameter } from './validators/validateEntryParameter';
+import {
+  allowedEntryValues,
+  validateEntryParameter,
+} from './validators/validateEntryParameter';
 import { validatePackageName } from './validators/validatePackageName';
 import { validateFilePath } from './validators/validateFilePath';
-import { Environment } from './types';
+import { Environment, PackageEntryType } from './types';
 import { isParameterValidationError } from './errors/ValidationError';
 import {
   HTTPRequestError,
   isHTTPRequestError,
 } from './errors/HTTPRequestError';
 import { getCacheControlHeader } from './helpers/cache-control';
-import { parseRequestParams } from './helpers/parse-request-params';
 import { NPMClient } from './npm';
 import getContentTypeHeader from './helpers/content-type';
 import { resolvePackageEntry } from './helpers/resolve-package-entry';
+
+/**
+ * These routes match all possible combinations of short-hand requests, semver requests and full file requests
+ * The only parameter that will always be included in the result is the `<packageAndVersion` parameter,
+ * containing a value such as `test-package@latest`, however WITHOUT the `@company` scope!
+ *
+ * The `@company` scope will be optionally available on the `scope` parameter,
+ * because it is separated with a slash and matching these together would complicate the RegExp (easier to combine later!)
+ *
+ * the `filePathOrEntry` parameter will include everything after the packageOrVersion parameter.
+ * Meaning this can be either `main` / `unpkg` for the entry type,
+ * OR it can be the full file path that should be served from the tarball.
+ */
+const routes = [
+  /**
+   * matches paths such as
+   * `/@company/test-package`
+   * `/@company/test-package@latest`
+   * `/@company/test-package@2.0.0`
+   */
+  /^\/@(?<scope>[^/]+)\/(?<packageAndVersion>[^/]+)$/gm,
+
+  /**
+   * matches paths such as
+   * `/@company/test-package@2.0.0/dist/index.js`
+   * `/@company/test-package@latest/unpkg`
+   */
+  /^\/@(?<scope>[^/]+)\/(?<packageAndVersion>[^/]+)\/(?<filePathOrEntry>(.*))$/gm,
+
+  /**
+   * matches paths such as
+   * `/test-package`
+   * `/test-package@latest`
+   */
+  /^\/(?<packageAndVersion>[^/]+)$/gm,
+
+  /**
+   * matches paths such as
+   * `/test-package@2.0.0/dist/index.js`
+   * `/test-package@latest/unpkg`
+   */
+  /^\/(?<packageAndVersion>[^/]+)\/(?<filePathOrEntry>(.*))$/gm,
+];
+
+type MatchParams = {
+  scope?: string;
+  packageAndVersion: string;
+  filePathOrEntry?: string;
+};
+
+const parseRequestParams = (pathname: string) => {
+  const decodedPath = decodeURIComponent(pathname);
+  const results = routes
+    .map((regexp) => {
+      const result = decodedPath.matchAll(regexp).next().value;
+      if (result) {
+        return result.groups;
+      }
+      return null;
+    })
+    .filter((x) => x !== null);
+
+  const matchParams: MatchParams = results[0];
+
+  const [packageName, requestedVersion = 'latest'] =
+    matchParams.packageAndVersion.split('@');
+  const requestedPackage = matchParams.scope
+    ? `@${matchParams.scope}/${packageName}`
+    : packageName;
+  const requestedFile = matchParams.filePathOrEntry || 'main';
+
+  return { requestedPackage, requestedVersion, requestedFile };
+};
 
 const handleRequest = async (
   req: Request,
   env: Environment,
 ): Promise<Response> => {
-  const route = /^\/(?<entry>(main|module|unpkg))?\/?(?<request>.*)$/gm;
   const parsedURL = new URL(req.url);
-  const match = parsedURL.pathname.matchAll(route).next().value;
 
-  if (!match) {
-    return new Response(null, { status: 404 });
-  }
-
-  const params = parseRequestParams(decodeURIComponent(parsedURL.pathname));
+  const { requestedPackage, requestedVersion, requestedFile } =
+    parseRequestParams(parsedURL.pathname);
 
   const npmClient = new NPMClient({
     registryUrl: env.REGISTRY_URL,
@@ -33,20 +103,20 @@ const handleRequest = async (
     registryPassword: env.REGISTRY_PASSWORD,
   });
 
-  if ('entryType' in params) {
+  if (allowedEntryValues.includes(requestedFile)) {
     /**
-     * the request is a shorthand request like `/main/test-package@2.0.0` or simply `/main/test-package`
+     * the request is a shorthand request like `/test-package@2.0.0` or simply `/test-package`
      * which will redirect to the actual entry path
      */
 
-    validateEntryParameter(params.entryType);
-    validatePackageName(params.package);
+    validateEntryParameter(requestedFile);
+    validatePackageName(requestedPackage);
 
     const { fullPathname, exactVersionMatch } = await resolvePackageEntry(
       npmClient,
-      params.entryType,
-      params.package,
-      params.version,
+      requestedFile as PackageEntryType,
+      requestedPackage,
+      requestedVersion,
     );
 
     const { protocol, hostname } = parsedURL;
@@ -59,23 +129,23 @@ const handleRequest = async (
       },
     });
   } else {
-    validatePackageName(params.package);
-    validateFilePath(params.file);
+    validatePackageName(requestedPackage);
+    validateFilePath(requestedFile);
 
     const file = await npmClient.readFileFromPackage(
-      params.package,
-      params.version,
-      params.file,
+      requestedPackage,
+      requestedVersion,
+      requestedFile,
     );
 
     if (file === null) {
       throw new HTTPRequestError(
         404,
-        `File "${params.file}" not found in tarball of ${params.package}@${params.version}`,
+        `File "${requestedFile}" not found in tarball of ${requestedPackage}@${requestedVersion}`,
       );
     }
 
-    const [filename] = params.file.split('/').reverse();
+    const [filename] = requestedFile.split('/').reverse();
     return new Response(file.contents, {
       headers: {
         'Content-Type': getContentTypeHeader(filename),

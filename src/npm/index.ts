@@ -167,22 +167,9 @@ export class NPMClient {
     }
 
     const buffer = await res.arrayBuffer();
-
-    const pakoInflateStartTime = Date.now();
     const decompressed = pako.inflate(new Uint8Array(buffer));
-    const pakoInflateEndTime = Date.now();
 
-    console.log(
-      `[NPM] pako.inflate took ${pakoInflateEndTime - pakoInflateStartTime}ms`,
-    );
-
-    const untarStartTime = Date.now();
-    const result = untar(decompressed);
-    const untarEndTime = Date.now();
-
-    console.log(`[NPM] untar took ${untarEndTime - untarStartTime}ms`);
-
-    return result;
+    return untar(decompressed);
   };
 
   readFileFromPackage = async (

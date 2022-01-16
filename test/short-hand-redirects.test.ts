@@ -6,16 +6,30 @@ const defaultEnv = {};
 
 const handleRequest = worker.fetch;
 
-describe('semver redirects', () => {
+describe('shorthand redirects', () => {
   beforeAll(() => {
     server.listen();
   });
   afterAll(() => {
     server.close();
   });
+
   it('should redirect to latest version by default', async () => {
     const result = await handleRequest(
-      new Request(`${testHost}/main/${testPackageName}`, {
+      new Request(`${testHost}/${testPackageName}/main`, {
+        method: 'GET',
+      }),
+      defaultEnv,
+    );
+    expect(result.status).toEqual(302);
+    expect(result.headers.get('location')).toEqual(
+      `${testHost}/${testPackageName}@2.0.0/${testEntryFilePath}`,
+    );
+  });
+
+  it('should default to "main" entry', async () => {
+    const result = await handleRequest(
+      new Request(`${testHost}/${testPackageName}`, {
         method: 'GET',
       }),
       defaultEnv,
@@ -28,7 +42,7 @@ describe('semver redirects', () => {
 
   it(`~1.1.0 should 302 redirect to 1.1.1`, async () => {
     const result = await handleRequest(
-      new Request(`${testHost}/main/${testPackageName}@~1.1.0`, {
+      new Request(`${testHost}/${testPackageName}@~1.1.0/main`, {
         method: 'GET',
       }),
       defaultEnv,
@@ -41,7 +55,7 @@ describe('semver redirects', () => {
 
   it('^1.0.0 should 302 redirect to 1.1.1', async () => {
     const result = await handleRequest(
-      new Request(`${testHost}/main/${testPackageName}@^1.0.0`, {
+      new Request(`${testHost}/${testPackageName}@^1.0.0/main`, {
         method: 'GET',
       }),
       defaultEnv,
@@ -55,7 +69,7 @@ describe('semver redirects', () => {
 
   it('version @2 should 302 redirect to 2.0.0', async () => {
     const result = await handleRequest(
-      new Request(`${testHost}/main/${testPackageName}@2`, {
+      new Request(`${testHost}/${testPackageName}@2/main`, {
         method: 'GET',
       }),
       defaultEnv,
@@ -68,7 +82,7 @@ describe('semver redirects', () => {
 
   it('exact version should 301 redirect', async () => {
     const result = await handleRequest(
-      new Request(`${testHost}/main/${testPackageName}@1.0.0`, {
+      new Request(`${testHost}/${testPackageName}@1.0.0/main`, {
         method: 'GET',
       }),
       defaultEnv,
@@ -83,7 +97,7 @@ describe('semver redirects', () => {
   describe('dist-tag', () => {
     it('@next should 302 redirect to 3.0.0-rc.0', async () => {
       const result = await handleRequest(
-        new Request(`${testHost}/main/${testPackageName}@next`, {
+        new Request(`${testHost}/${testPackageName}@next/main`, {
           method: 'GET',
         }),
         defaultEnv,
@@ -96,7 +110,7 @@ describe('semver redirects', () => {
 
     it('@latest should 302 redirect to 2.0.0', async () => {
       const result = await handleRequest(
-        new Request(`${testHost}/main/${testPackageName}@latest`, {
+        new Request(`${testHost}/${testPackageName}@latest/main`, {
           method: 'GET',
         }),
         defaultEnv,

@@ -20,7 +20,7 @@ describe('scoped packages', () => {
 
   it('should redirect to latest version', async () => {
     const result = await handleRequest(
-      new Request(`${testHost}/main/${scopedTestPackageName}`, {
+      new Request(`${testHost}/${scopedTestPackageName}/main`, {
         method: 'GET',
       }),
       defaultEnv,
