@@ -1,0 +1,44 @@
+{
+  "name": "test-package",
+  "dist-tags": {
+    "latest": "2.0.0",
+    "next": "3.0.0-rc.0"
+  },
+  "versions": {
+    "1.0.0": {
+      "name": "test-package",
+      "main": "index.js",
+      "dist": {
+        "tarball": "https://registry.npmjs.org/test-package/-/test-package-1.0.0.tgz"
+      }
+    },
+    "1.1.0": {
+      "name": "test-package",
+      "main": "index.js",
+      "dist": {
+        "tarball": "https://registry.npmjs.org/test-package/-/test-package-1.1.0.tgz"
+      }
+    },
+    "1.1.1": {
+      "name": "test-package",
+      "main": "index.js",
+      "dist": {
+        "tarball": "https://registry.npmjs.org/test-package/-/test-package-1.1.1.tgz"
+      }
+    },
+    "2.0.0": {
+      "name": "test-package",
+      "main": "index.js",
+      "dist": {
+        "tarball": "https://registry.npmjs.org/test-package/-/test-package-2.0.0.tgz"
+      }
+    },
+    "3.0.0-rc.0": {
+      "name": "test-package",
+      "main": "index.js",
+      "dist": {
+        "tarball": "https://registry.npmjs.org/test-package/-/test-package-3.0.0-rc.0.tgz"
+      }
+    }
+  }
+}

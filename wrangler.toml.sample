@@ -1,0 +1,20 @@
+name = "unpkg-workers"
+type = "javascript"
+# workers_dev = true
+
+# After running `wrangler login`, the Account ID can be retrieved using `wrangler whoami` or through the Cloudflare dashboard
+account_id = ""
+compatibility_date = "2022-01-02"
+
+[env.production]
+# deploy with `wrangler publish --env production`
+# The ID of the domain to deploy to, can be found in Cloudflare dashboard
+zone_id = ""
+route = ""
+
+[build.upload]
+format = "modules"
+main = "./worker.mjs"
+
+[build]
+command = "npm run build"

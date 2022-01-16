@@ -1,0 +1,6 @@
+{
+  "rules": {
+    // var-requires are needed in test setups to map mock data
+    "@typescript-eslint/no-var-requires": "off"
+  }
+}
