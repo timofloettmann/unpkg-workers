@@ -8,8 +8,7 @@
     "format": "prettier --write  '*.{json,js}' 'src/**/*.{js,ts}' 'test/**/*.{js,ts}'",
     "lint": "eslint --max-warnings=0 --ignore-path .gitignore src test && prettier --check '*.{json,js}' 'src/**/*.{js,ts}' 'test/**/*.{js,ts}'",
     "test": "jest",
-    "test:watch": "jest --watchAll",
-    "prepare": "husky install"
+    "test:watch": "jest --watchAll"
   },
   "author": "Timo Flöttmann <timo.floettmann@gmail.com>",
   "license": "MIT OR Apache-2.0",
