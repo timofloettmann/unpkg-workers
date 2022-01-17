@@ -55,14 +55,11 @@ export class NPMClient {
 
     const startTime = Date.now();
 
-    const cache = await caches.open('npm');
+    const cache = caches.default;
     const cached = await cache.match(url);
 
     if (cached) {
-      console.log(`[NPM-Cache] HIT: ${url}`);
       return cached.clone();
-    } else {
-      console.log(`[NPM-Cache] MISS: ${url}`);
     }
 
     const res = await fetch(url, {
@@ -78,7 +75,7 @@ export class NPMClient {
 
     const endTime = Date.now();
     console.log(
-      `[Fetch] completed with status code ${res.status} (${
+      `${url} fetched with status code ${res.status} (${
         res.statusText
       }), took ${endTime - startTime}ms`,
     );
