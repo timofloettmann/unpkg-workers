@@ -1,8 +1,8 @@
 const CACHE_CONTROL = {
   NO_CACHE: `public, no-cache`,
-  NOT_FOUND: `public, max-age=60`, // one minute
-  PERMANENT: `public, max-age=31536000`, // one year
-  TEMPORARY_REDIRECT: `public, max-age=300`, // five minutes
+  NOT_FOUND: `public, s-maxage=60`, // one minute
+  PERMANENT: `public, s-maxage=31536000, immutable`, // one year
+  TEMPORARY_REDIRECT: `public, s-maxage=300`, // five minutes
 };
 
 export const getCacheControlHeader = (httpStatus: number): string => {
@@ -20,6 +20,6 @@ export const getCacheControlHeader = (httpStatus: number): string => {
     case 500:
       return CACHE_CONTROL.NO_CACHE;
     default:
-      return `public, max-age=60`; // Cache everything we haven't covered for one minute?
+      return `public, s-maxage=60`; // Cache everything we haven't covered for one minute?
   }
 };
